@@ -40,12 +40,14 @@ extern G_q H;
 extern bool parallel;
 extern int num_threads;
 
-static const int NR_JSON_KEYS = 6; // gen, ord, mod, public, {original, mixed}_ciphers
+static const int NR_JSON_KEYS = 8; // gen, ord, mod, public, proof, public_randoms, {original, mixed}_ciphers
 static const int KEY_LENGTH = 50;
 static const long SKIP_LENGTH = 1000000000000;
 static const int VALUE_LENGTH = 10000;
+static const int PROOF_LENGTH = 60000;	// Size of alternative buffer
 static char raw_key[KEY_LENGTH];
 static char value[VALUE_LENGTH];
+static char p_value[PROOF_LENGTH];	// Alternative buffer to parse the proof
 static char json_structure;
 static string chars_clean(" :,\"[");
 
@@ -119,9 +121,10 @@ void Functions::read_config(const string& name, vector<long> & num, ZZ & genq){
 	}
 }
 
+// Added public_randoms
 void Functions::write_crypto_ciphers_to_file(const char *ciphers_file, CipherTable *ciphers,
 					CipherTable *mixed_ciphers, ElGammal *elgammal,
-					string proof, long m, long n) {
+					string proof, string public_randoms, long m, long n) {
 	ofstream ofciphers;
 	ofciphers.open(ciphers_file);
 	if (ofciphers.fail()) {
@@ -139,6 +142,8 @@ void Functions::write_crypto_ciphers_to_file(const char *ciphers_file, CipherTab
 	ofciphers << ", ";
 	ofciphers << "\"public\": " << elgammal->get_pk();
 	ofciphers << ", ";
+	ofciphers << "\"public_randoms\": \"" << public_randoms;
+	ofciphers << "\", ";
 	ofciphers << "\"proof\": \"" << proof;
 	ofciphers << "\", ";
 	ofciphers << "\"original_ciphers\": [";
@@ -801,4 +806,145 @@ void Functions::sha256(string input, unsigned char* md) {
     sha256_init(&context);
     sha256_update(&context, (unsigned char*)input.c_str(), input.size());
     sha256_final(&context, md);
+}
+
+/**
+ * @brief Parsing of NIZK proof from file
+ * 
+ * @param ifciphers string stream from JSON at key "proof"
+ * @param proof pointer of destination string
+ * @param m number of rows of the cipher matrix
+ * @param n number of columns of the cipher matrix
+ */
+void parse_proof(ifstream& ifciphers, string& proof,
+				const long m, const long n) {
+	// Number of brakets batches
+	int braket_size[3] = {7, 7, 8};
+
+	// Ignores up to the first " within the next 10 characters
+	ifciphers.ignore(10, '"');
+	proof = "";
+
+	for (int i = 0; i < 3; i++) {
+		// Reads up to the first [ within the next PROOF_LENGTH characters and saves the char array in p_value
+		ifciphers.get(p_value, PROOF_LENGTH, '[');
+		string s_value(p_value);
+		proof.append(s_value);
+		ifciphers.ignore(2, '[');
+
+		// Iterates over the 7 tuples 
+		for (int j = 0; j < braket_size[i]; j++) {
+			ifciphers.get(value, VALUE_LENGTH, ',');
+			string s_value(value);
+			proof.append("[").append(s_value).append(",\n");
+			ifciphers.ignore(2, ',');
+			ifciphers.get(value, VALUE_LENGTH, ']');
+			string s_value_1(value);
+			if (j != braket_size[i]-1) {
+				proof.append(s_value_1).append("] \n");
+			 	ifciphers.ignore(VALUE_LENGTH, '[');
+			} else {
+				proof.append(s_value_1).append("] ");
+			}
+		}
+		ifciphers.ignore(2, ']');
+	}
+
+	// Reads up to the first "" within the next PROOF_LENGTH characters and saves the char array in p_value
+	ifciphers.get(p_value, PROOF_LENGTH, '"');
+	string s_value(p_value);
+	proof.append(s_value);
+}
+
+/**
+ * @brief Setting up of all the variables required for the validation of a mix process
+ * 
+ * @param ciphers_file source document after mixing
+ * @param IC pointer to the matrix of original ciphers
+ * @param SC pointer to the matrix of shuffled ciphers
+ * @param m number of rows of the cipher matrix
+ * @param n number of columns of the cipher matrix
+ * @param proof NIZK proof of the mix
+ * @param pubv generators used by Pedersen commitment
+ * @return ** ElGammal* ElGammal object setted up to the specified configuration
+ */
+ElGammal* Functions::set_validation_vars_from_json(const char *ciphers_file,
+			vector<vector<Cipher_elg>* >& IC,
+			vector<vector<Cipher_elg>* >& SC,
+			const long m, const long n, 
+			string &proof, string &pubv) {
+
+	ifstream ifciphers;
+	ifciphers.open(ciphers_file);
+	if (ifciphers.fail()) {
+		cerr << "cannot open ciphers file " << ciphers_file <<endl;
+		exit(1);
+	}
+
+	check_json_structure(ifciphers);
+
+	map<string, string> crypto {
+		{"generator", ""},
+		{"order", ""},
+		{"modulus", ""},
+		{"public", ""},
+		{"public_randoms", ""}
+	};
+	bool passedby_ciphers = false;
+	extract_fill_crypto(ifciphers, crypto, passedby_ciphers);
+	if (passedby_ciphers) {
+		ifciphers.clear();
+		ifciphers.seekg(0, ios::beg);
+		check_json_structure(ifciphers);
+	}
+
+#if USE_REAL_POINTS
+        // We should never be in here: Zeus works with ElGammal big ints
+	CurvePoint generator = curve_basepoint();
+        ZZ order = ZZ(NTL::conv<NTL::ZZ>("7237005577332262213973186563042994240857116359379907606001950938285454250989"));
+        // ZZ mod = ZZ(NTL::conv<NTL::ZZ>("2093940378184301311653365957372856779274958817946641127345598909177821235333110899157852449358735758089191470831461169154289110965924549400975552759536367817772197222736877807377880197200409316970791234520514702977005806082978079032920444679504632247059010175405894645810064101337094360118559702814823284408560044493630320638017495213077621340331881796467607713650957219938583"));
+        ZZ modulus = ZZ(NTL::conv<NTL::ZZ>("42"));
+#else
+	CurvePoint generator =
+		zz_to_curve_pt(ZZ(NTL::conv<NTL::ZZ>(crypto["generator"].c_str())));
+	ZZ order = NTL::conv<NTL::ZZ>(crypto["order"].c_str());
+	ZZ modulus = NTL::conv<NTL::ZZ>(crypto["modulus"].c_str());
+#endif
+	// Override the init() setup
+	G = G_q(generator, order, modulus);
+	H = G_q(generator, order, modulus);
+
+	ElGammal* elgammal = new ElGammal();
+	elgammal->set_group(G);
+	Mod_p pk;
+	istringstream is_pk(crypto["public"]);
+	is_pk >> pk;
+	elgammal->set_pk(pk);
+
+	pubv = crypto["public_randoms"];
+
+	string _proof("proof");
+	if (!find_json_key(ifciphers, _proof)) {
+		cerr << "Key 'proof' not found in JSON file" << endl;
+		exit(1);
+	}
+	parse_proof(ifciphers, proof, m, n);
+
+	string original_ciphers("original_ciphers");
+	if (!find_json_key(ifciphers, original_ciphers)) {
+		cerr << "Key 'original_ciphers' not found in JSON file" << endl;
+		exit(1);
+	}
+	parse_cipher_matrix(ifciphers, IC, m, n);
+
+	string mixed_ciphers("mixed_ciphers");
+	if(!find_json_key(ifciphers, mixed_ciphers)) {
+		cerr << "Key 'mixed_ciphers' not found in JSON file" << endl;
+		exit(1);
+	}
+	parse_cipher_matrix(ifciphers, SC, m, n);
+
+	ifciphers.close();
+
+	return elgammal;
 }

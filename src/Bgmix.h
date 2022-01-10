@@ -13,6 +13,8 @@ void hello();
 
 bool generate_ciphers(const char * ciphers_file, const long dim_m, const long dim_n);
 bool mix(const char * ciphers_file, const long dim_m, const long dim_n);
+// Added external validation of mixing
+bool validate_mix(const char * ciphers_file, const long dim_m, const long dim_n);
 
 #include <stdint.h>
 

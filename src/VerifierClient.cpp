@@ -45,11 +45,14 @@ bool VerifierClient::process_nizk(string nizk) {
 		proof.read_next(input_to_ver, challenge, rand);
 		round6(input_to_ver, challenge, rand);
 	} else {
+		cout << "m_r " << m_r << endl;
 		while (m_r > 4) {
 			proof.read_next(input_to_ver, challenge, rand);
 			round6red(input_to_ver, challenge, rand);
+			cout << "round6red: m_r " << m_r << endl;
 			proof.read_next(input_to_ver, challenge, rand);
 			round6red_1(input_to_ver, challenge, rand);
+			cout << "round6red_1: m_r " << m_r << endl;
 		}
 	}
 	proof.read_next(input_to_ver, challenge, rand);

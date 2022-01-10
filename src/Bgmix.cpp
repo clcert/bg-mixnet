@@ -398,7 +398,7 @@ bool generate_ciphers(const char* ciphers_file, const long dim_m, const long dim
 	cout << "encryption time: " << enc_time - begin << endl; 
 
 	Functions::write_crypto_ciphers_to_file(ciphers_file, ciphers, NULL,
-							elgammal, "", m, n);
+							elgammal, "", "", m, n);
 
 	for (int i = 0; i < m * n; i++) {
 		delete [] secrets[i];
@@ -493,8 +493,9 @@ bool mix(const char* ciphers_file, const long dim_m, const long dim_n) {
 	cout << "verification is done! In " << time(NULL) - verify_time << endl;
 	cout << "Shuffle + prove + verify = " << time(NULL) - shuffle_time << endl;
 
+	// Added public randoms
 	Functions::write_crypto_ciphers_to_file(ciphers_file, input_ciphers,
-						shuffled_ciphers, elgammal, proof, m, n);
+						shuffled_ciphers, elgammal, proof, public_randoms, m, n);
 	delete elgammal;
 	delete input_ciphers;
 	delete shuffled_ciphers;
@@ -544,4 +545,48 @@ void delete_int_arr(int* x) {
 
 int get_int_elem(int* arr, int i) {
 	return arr[i];
+}
+
+/**
+ * @brief Validation of mix's proof
+ * 
+ * @param ciphers_file Filename containing mix results
+ * @param dim_m Number of rows in cipher matrix
+ * @param dim_n Number of columns in cipher matrix
+ */
+bool validate_mix(const char* ciphers_file, const long dim_m, const long dim_n) {
+	init();
+	
+	num[1] = dim_m;
+	num[2] = dim_n;
+
+	m = num[1];
+	long n = num[2];
+
+	check_usage(m, n);
+
+	// Pointers for cipher matrices
+	CipherTable* input_ciphers = new CipherTable();
+	CipherTable* shuffled_ciphers = new CipherTable();
+	input_ciphers->set_dimensions(m, n);
+	shuffled_ciphers->set_dimensions(m, n);
+	vector<vector<Cipher_elg>*>* cm_in = input_ciphers->getCMatrix();
+	vector<vector<Cipher_elg>*>* cm_sh = shuffled_ciphers->getCMatrix();
+
+	string proof;
+	string public_randoms;
+
+	// Read from file
+	ElGammal *elgammal = Functions::set_validation_vars_from_json(ciphers_file, *cm_in, *cm_sh, m, n, proof, public_randoms);
+
+	// Run verification
+	int ret = verify(elgammal, proof, input_ciphers, shuffled_ciphers, public_randoms);
+	
+	if (ret) {
+		cout << "everything passed!" <<endl;
+	} else {
+		cout << "validation failed!" <<endl;
+	}
+
+	return ret;
 }

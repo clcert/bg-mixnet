@@ -31,14 +31,21 @@ public:
 	static void read_config(const string& config_file, vector<long> & num, ZZ & genq);
 	static void sha256(string input, unsigned char* out_buf);
 
+	// Added public_randoms
 	static void write_crypto_ciphers_to_file(const char *ciphers_file,
 						CipherTable *ciphers,
 						CipherTable *mixed_ciphers,
 						ElGammal *elgammal, string proof,
-						long m, long n);
+						string public_randoms, long m, long n);
 	static ElGammal* set_crypto_ciphers_from_json(const char *ciphers_file,
 						 vector<vector<Cipher_elg>* >& C,
 						 const long m, const long n);
+	// Added reading for proof and commitment generators
+	static ElGammal* set_validation_vars_from_json(const char * ciphers_file,
+						 vector<vector<Cipher_elg>* >& IC,
+						 vector<vector<Cipher_elg>* >& SC,
+						 const long m, const long n, 
+						 string &proof, string &pubv);
 
 	static void print_crypto(const map<string, string>& crypto);
 
@@ -61,7 +68,7 @@ public:
 	static int get_num_cols(int m, int num_elements);
 	//returns the Hadamard product of x and y
 	static void Hadamard( vector<ZZ>* ret, vector<ZZ>* x, vector<ZZ>* y);
-	//Calculates the bilinear map Z^n x Z^ -> Z: x(y¡t)^T
+	//Calculates the bilinear map Z^n x Z^ -> Z: x(yï¿½t)^T
 	static ZZ bilinearMap(vector<ZZ>* x, vector<ZZ>* y, vector<ZZ>* t);
 
 	static long tolong(string s);
