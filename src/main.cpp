@@ -7,8 +7,10 @@
 static int kNumTests = 1;
 
 void test_mix(long dim_m, long dim_n) {
+	char election_file[] = "voto_example.json";
 	char ciphers_file[] = "ciphers.json";
-	generate_ciphers(ciphers_file, dim_m, dim_n);
+	//generate_ciphers(ciphers_file, dim_m, dim_n);
+	read_election(election_file, ciphers_file, dim_m, dim_n);
 	mix(ciphers_file, dim_m, dim_n);
 	// Added external validation of mixing
 	validate_mix(ciphers_file, dim_m, dim_n);

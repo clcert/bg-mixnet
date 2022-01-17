@@ -898,18 +898,11 @@ ElGammal* Functions::set_validation_vars_from_json(const char *ciphers_file,
 		check_json_structure(ifciphers);
 	}
 
-#if USE_REAL_POINTS
-        // We should never be in here: Zeus works with ElGammal big ints
-	CurvePoint generator = curve_basepoint();
-        ZZ order = ZZ(NTL::conv<NTL::ZZ>("7237005577332262213973186563042994240857116359379907606001950938285454250989"));
-        // ZZ mod = ZZ(NTL::conv<NTL::ZZ>("2093940378184301311653365957372856779274958817946641127345598909177821235333110899157852449358735758089191470831461169154289110965924549400975552759536367817772197222736877807377880197200409316970791234520514702977005806082978079032920444679504632247059010175405894645810064101337094360118559702814823284408560044493630320638017495213077621340331881796467607713650957219938583"));
-        ZZ modulus = ZZ(NTL::conv<NTL::ZZ>("42"));
-#else
 	CurvePoint generator =
 		zz_to_curve_pt(ZZ(NTL::conv<NTL::ZZ>(crypto["generator"].c_str())));
 	ZZ order = NTL::conv<NTL::ZZ>(crypto["order"].c_str());
 	ZZ modulus = NTL::conv<NTL::ZZ>(crypto["modulus"].c_str());
-#endif
+
 	// Override the init() setup
 	G = G_q(generator, order, modulus);
 	H = G_q(generator, order, modulus);
@@ -947,4 +940,91 @@ ElGammal* Functions::set_validation_vars_from_json(const char *ciphers_file,
 	ifciphers.close();
 
 	return elgammal;
+}
+
+/**
+ * @brief Parses ciphers from an election file
+ * 
+ * @param election_file election JSON file
+ * @param C output CipherTable
+ * @param m number of rows of the cipher matrix
+ * @param n number of columns of the cipher matrix
+ * @param votes number of votes casted in the election
+ * @param options number of options per vote
+ */
+void parse_election(const char* election_file, vector<vector<Cipher_elg>*>* C,
+							const long m, const long n,
+							const long votes, const long options) {
+	ifstream ifciphers;
+	ifciphers.open(election_file);
+	if (ifciphers.fail()) {
+		cerr << "cannot open ciphers file " << election_file <<endl;
+		exit(1);
+	}
+
+	check_json_structure(ifciphers);
+	string answers("answers");
+	if (!find_json_key(ifciphers, answers)) {
+		cerr << "Key 'answers' not found in JSON file" << endl;
+		exit(1);
+	}
+
+	vector<vector<string>> ciphers(votes*options);
+
+	for (long i = 0; i < votes; i++) {
+		// Ingnore up to the second [
+		ifciphers.ignore(10, '[');
+		ifciphers.ignore(30, '[');
+		for (long j = 0; j < options; j++) {
+			// Ingnore up to the first "
+			ifciphers.ignore(30, '"');
+			ifciphers.get(value, VALUE_LENGTH, '"');
+			string alpha_value(value);
+
+			ifciphers.ignore(30, '"');
+			ifciphers.get(value, VALUE_LENGTH, '"');
+			string beta_value(value);
+
+			ciphers[i*options + j] = {alpha_value, beta_value};
+		}
+	}
+
+	long alpha, beta;
+	for (long i = 0; i < m; i++) {
+		C->push_back(new vector<Cipher_elg>(n));
+	}
+	for (long i = 0; i < m; i++) {
+		for (long j = 0; j < n; j++) {
+			if (i*options + j < votes*options) {
+				alpha = stol(ciphers[i*options + j][0]);
+				beta = stol(ciphers[i*options + j][1]);
+			} else {
+				alpha = 0;
+				beta = 0;
+			}
+			Mod_p mod_a = (Mod_p) alpha;
+			Mod_p mod_b = (Mod_p) beta;
+			C->at(i)->at(j) = Cipher_elg(mod_a, mod_b);
+		}
+	}
+}
+
+/**
+ * @brief Set the election ciphers from file object
+ * 
+ * @param election_file file containing election data
+ * @param m number of rows in the cipher matrix
+ * @param n number of columns in the cipher matrix
+ * @param votes number of votes casted in the election
+ * @param options number of options available in each vote
+ * @return CipherTable* mixnet input cipher matrix
+ */
+CipherTable* set_election_ciphers_from_file(const char * election_file,
+						 const long m, const long n,
+						 const long votes, const long options) {
+	CipherTable* ret = new CipherTable();
+	parse_election(election_file, ret->getCMatrix(), m, n, votes, options);
+	ret->set_dimensions(m, n);
+
+	return ret;
 }

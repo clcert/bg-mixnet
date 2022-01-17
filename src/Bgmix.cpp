@@ -553,6 +553,8 @@ int get_int_elem(int* arr, int i) {
  * @param ciphers_file Filename containing mix results
  * @param dim_m Number of rows in cipher matrix
  * @param dim_n Number of columns in cipher matrix
+ * @return true The mix was validated correctly
+ * @return false The mix could not be validated
  */
 bool validate_mix(const char* ciphers_file, const long dim_m, const long dim_n) {
 	init();
@@ -589,4 +591,45 @@ bool validate_mix(const char* ciphers_file, const long dim_m, const long dim_n) 
 	}
 
 	return ret;
+}
+
+/**
+ * @brief Writes Helios election data in the format expected by the mixnet
+ * 
+ * @param ciphers_file Filename where the elecction data will ve written
+ * @param dim_m Number of rows in cipher matrix
+ * @param dim_n Number of columns in cipher matrix
+ * @return true The election data was read correctly
+ * @return false The election data could not be read
+ */
+bool read_election(const char * election_file, const char * ciphers_file,
+					const long dim_m, const long dim_n) {
+	init();
+
+	num[1] = dim_m;
+	num[2] = dim_n;
+
+	m = num[1];
+	long n = num[2];
+
+	check_usage(m, n);
+
+	// Read SECRET_SIZE, votes and options
+	// const long SECRET_SIZE = 618;
+	const long votes = 1;
+	const long options = 3;
+
+	// Read public from config (pk & G_q)
+	ElGammal* elgammal = (ElGammal*)create_pub_key(1);
+
+	CipherTable* ciphers = Functions::set_election_ciphers_from_file(election_file,
+							m, n, votes, options);
+
+	Functions::write_crypto_ciphers_to_file(ciphers_file, ciphers, NULL,
+							elgammal, "", "", m, n);
+
+	delete ciphers;
+	delete elgammal;
+
+	return true;
 }

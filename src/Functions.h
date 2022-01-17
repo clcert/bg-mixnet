@@ -46,6 +46,10 @@ public:
 						 vector<vector<Cipher_elg>* >& SC,
 						 const long m, const long n, 
 						 string &proof, string &pubv);
+	// Read ciphers from Helios election
+	static CipherTable* set_election_ciphers_from_file(const char * election_file,
+						 const long m, const long n,
+						 const long votes, const long options);
 
 	static void print_crypto(const map<string, string>& crypto);
 
