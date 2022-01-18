@@ -622,8 +622,10 @@ bool read_election(const char * election_file, const char * ciphers_file,
 	// Read public from config (pk & G_q)
 	ElGammal* elgammal = (ElGammal*)create_pub_key(1);
 
-	CipherTable* ciphers = Functions::set_election_ciphers_from_file(election_file,
-							m, n, votes, options);
+	CipherTable* ciphers = new CipherTable();
+
+	/*Functions::set_election_ciphers_from_file(election_file, ciphers,
+							m, n, votes, options);*/
 
 	Functions::write_crypto_ciphers_to_file(ciphers_file, ciphers, NULL,
 							elgammal, "", "", m, n);

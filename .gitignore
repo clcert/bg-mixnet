@@ -33,5 +33,4 @@ __pycache__
 venv
 bgmix
 library_setup.sh
-ciphers.json
-voto_example.json
+*.json
