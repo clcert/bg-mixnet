@@ -1027,3 +1027,20 @@ void set_election_ciphers_from_file(const char * election_file,
 	parse_election(election_file, ciphers->getCMatrix(), m, n, votes, options);
 	ciphers->set_dimensions(m, n);
 }
+
+/**
+ * @brief Create an ElGammal cipher for a single secret
+ * 
+ * @param secret secret to be encoded
+ * @param enc_key ElGammal object
+ * @return ElGammal encryption
+ */
+Cipher_elg createSingleCipher(ZZ secret, ElGammal* enc_key) {
+	ZZ ord = H.get_ord();
+	ZZ ran_2 = RandomBnd(ord);
+	Cipher_elg temp;
+	Mod_p ran_1;
+	ran_1 = H.map_to_group_element(secret);
+	temp = enc_key->encrypt(ran_1, ran_2);
+	return temp;
+}

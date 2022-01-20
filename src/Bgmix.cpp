@@ -642,3 +642,20 @@ bool read_election(const char * election_file, const char * ciphers_file,
 
 	return true;
 }
+
+/**
+ * @brief 
+ * 
+ * @param secret 
+ * @return long* 
+ */
+long *encript_single_secret(long secret) {
+	ElGammal* elgammal = (ElGammal*)create_pub_key(8);
+	Cipher_elg cipher = Functions::createSingleCipher(to_ZZ(secret), elgammal);
+	CurvePoint u = cipher.get_u();
+	CurvePoint v = cipher.get_v();
+	long *ret = new long[2];
+	ret[0] = to_long(u.zz);
+	ret[1] = to_long(v.zz);
+	return ret;
+}

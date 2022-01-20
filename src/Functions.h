@@ -61,6 +61,7 @@ public:
 	static string ciphers_to_str(vector<vector<Cipher_elg>* >* ciphers);
 	static string parse_response(std::basic_streambuf<char>* in);
 
+	static Cipher_elg createSingleCipher(ZZ secrets, ElGammal* enc_key);
 	//generates N=num[0] different ciphertexts
 	static void createCipher(vector<vector<ZZ> >* secrets, int m, int n, vector<vector<Cipher_elg>* >* C, vector<vector<Mod_p>* >* elements, ElGammal* enc_key);
         static void createCipherWithProof(vector<vector<ZZ> >* secrets, int m, int n, int N, vector<vector<Cipher_elg>* >* C, vector<vector<Mod_p>* >* elements, char* proofs, ElGammal* enc_key);

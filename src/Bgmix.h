@@ -74,3 +74,5 @@ void* shuffle_internal(void* reenc_key,
 #endif
 
 #endif
+
+long *encrypt_single_secret(long secret);
