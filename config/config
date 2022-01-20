@@ -37,7 +37,7 @@
 # If only one group is used the file should consist of the prime p, prime order q,  a generator of G   and a generator of Z_q
 # If two different groups are used the file should consist of the prime p, prime order q, a generator of G, a generator of Z_q, the prime p1 and a generator of H
 # Or set parameter to 0 if you want to define groups of own choice.
-group
+group0
 
 
 

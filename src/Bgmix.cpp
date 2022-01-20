@@ -384,12 +384,19 @@ bool generate_ciphers(const char* ciphers_file, const long dim_m, const long dim
 
 	for (int i = 0; i < m * n; i++) {
 		secrets[i] = new unsigned char[SECRET_SIZE];
+		secrets[i][0] = 'I';
+		secrets[i][1] = 'n';
+		secrets[i][2] = 'v';
+		secrets[i][3] = 'a';
+		secrets[i][4] = 'l';
+		/*
 		for (int j = 0; j < SECRET_SIZE; j++) {
 			secrets[i][j] = (char)rand();
 		}
+		*/
 	}
-
-	ElGammal* elgammal = (ElGammal*)create_pub_key(1);
+	// 8 corresponds to key_example.json public_key[y]
+	ElGammal* elgammal = (ElGammal*)create_pub_key(8);
 
 	time_t begin = time(NULL);
 	CipherTable* ciphers = (CipherTable*) elg_encrypt((void**) secrets,
@@ -616,8 +623,8 @@ bool read_election(const char * election_file, const char * ciphers_file,
 
 	// Read SECRET_SIZE, votes and options
 	// const long SECRET_SIZE = 618;
-	const long votes = 1;
-	const long options = 3;
+	// const long votes = 1;
+	// const long options = 3;
 
 	// Read public from config (pk & G_q)
 	ElGammal* elgammal = (ElGammal*)create_pub_key(1);
