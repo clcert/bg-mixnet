@@ -1035,7 +1035,7 @@ void set_election_ciphers_from_file(const char * election_file,
  * @param enc_key ElGammal object
  * @return ElGammal encryption
  */
-Cipher_elg createSingleCipher(ZZ secret, ElGammal* enc_key) {
+Cipher_elg Functions::createSingleCipher(ZZ secret, ElGammal* enc_key) {
 	ZZ ord = H.get_ord();
 	ZZ ran_2 = RandomBnd(ord);
 	Cipher_elg temp;
