@@ -47,7 +47,7 @@ public:
 						 const long m, const long n, 
 						 string &proof, string &pubv);
 	// Read ciphers from Helios election
-	static CipherTable* set_election_ciphers_from_file(const char * election_file,
+	static void set_election_ciphers_from_file(const char * election_file,
 						 CipherTable *ciphers,
 						 const long m, const long n,
 						 const long votes, const long options);

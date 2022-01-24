@@ -1019,7 +1019,7 @@ void parse_election(const char* election_file, vector<vector<Cipher_elg>*>* C,
  * @param options number of options available in each vote
  * @return CipherTable* mixnet input cipher matrix
  */
-void set_election_ciphers_from_file(const char * election_file, 
+void Functions::set_election_ciphers_from_file(const char * election_file, 
 						 CipherTable *ciphers,
 						 const long m, const long n,
 						 const long votes, const long options) {

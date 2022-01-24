@@ -34,3 +34,4 @@ venv
 bgmix
 library_setup.sh
 *.json
+.python-version
