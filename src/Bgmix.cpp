@@ -647,18 +647,45 @@ bool read_election(const char * election_file, const char * ciphers_file,
 }
 
 /**
- * @brief 
+ * @brief Initializes the group
  * 
- * @param secret 
- * @return long* 
+ * @param g group generator
+ * @param q group order
+ * @param p group modulus
  */
-long *encrypt_single_secret(long secret) {
+void init_specified(long g, long q, long p) {
+	lock_guard<mutex> guard(gInitMutex);
+
+	if (kIsInit) return;
+	Functions::read_config(kConfigFile, num, genq);
+
+	NTL::ZZ gen_sc = NTL::conv<NTL::ZZ>(g);
+	CurvePoint gen = zz_to_curve_pt(gen_sc);
+	ZZ ord = ZZ(NTL::conv<NTL::ZZ>(q));
+	ZZ mod = ZZ(NTL::conv<NTL::ZZ>(p));
+
+    G = G_q(gen, ord, mod);
+    H = G_q(gen, ord, mod);
+	
+	m = num[1];
+	kIsInit = true;
+}
+
+/**
+ * @brief Encrypts a single seccret into an ElGammal pair
+ * 
+ * @param secret secret to be encrypted
+ * @return long* alpha, beta array
+ */
+unsigned long *encrypt_single_secret(long secret, long g, long q, long p) {
+	init();
 	ElGammal* elgammal = (ElGammal*)create_pub_key(8);
 	Cipher_elg cipher = Functions::createSingleCipher(to_ZZ(secret), elgammal);
 	CurvePoint u = cipher.get_u();
 	CurvePoint v = cipher.get_v();
-	long *ret = new long[2];
-	ret[0] = to_long(u.zz);
-	ret[1] = to_long(v.zz);
+	unsigned long *ret = new unsigned long[2];
+	ret[0] = to_ulong(u.zz);
+	ret[1] = to_ulong(v.zz);
+	cout << ret[0] << " , " << ret[1] << endl;
 	return ret;
 }

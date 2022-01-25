@@ -8,17 +8,18 @@ from ctypes import (
     c_bool,
     c_char_p,
     c_long,
+    c_ulong,
     POINTER
 )
 
-def setup_curves():
-    lib.init()
-
-def elg_encrypt(secret):
+def elg_encrypt(secret, g, q, p):
     c_secret = c_long(secret)
-    fun = lib._Z21encrypt_single_secretl
-    fun.restype = POINTER(c_long * 2)
-    return [i for i in fun(c_secret).contents]
+    c_g = c_long(g)
+    c_q = c_long(q)
+    c_p = c_long(p)
+    fun = lib._Z21encrypt_single_secretllll
+    fun.restype = POINTER(c_ulong * 2)
+    return [i for i in fun(c_secret, c_g, c_q, c_p).contents]
 
 def mix(filename, m, n):
     b_filename = filename.encode("utf-8")
@@ -41,21 +42,22 @@ def main(m, n, lib):
         beta = int(choice["beta"])
         ciphers.append([alpha, beta])
 
-    setup_curves()
+    key = data["publicKey"]
+    g = int(key["g"])
+    q = int(key["q"])
+    p = int(key["p"])
 
     for i in range(len(ciphers), m*n):
         # ElGammal encryption of the string "Inval"
-        inval = elg_encrypt(data["invalid"])
+        inval = elg_encrypt(data["invalid"], g, q, p)
         ciphers.append(
             [int(inval[0]), int(inval[1])]
         )
 
-    key = data["publicKey"]
-
     od = OrderedDict()
-    od["generator"] =  int(key["g"])
-    od["modulus"] = int(key["p"])
-    od["order"] = int(key["q"])
+    od["generator"] =  g
+    od["modulus"] = p
+    od["order"] = q
     od["public"] = int(key["y"])
     od["public_randoms"] = ""
     od["proof"] = ""

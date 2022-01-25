@@ -40,6 +40,7 @@ void delete_key(void* elgammal);
 
 /******************* Interface ********************/
 void init();
+void init_specified(long g, long q, long p);
 void* elg_encrypt(void** secrets, int secretLen, int arrayLen, int keyIndex);
 void* get_ciphertexts(void* cipher_table, void* len, void* elmenent_size);
 void* get_element(void* cipher_table, int index, void* len);
