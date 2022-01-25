@@ -7,11 +7,9 @@
 static int kNumTests = 1;
 
 void test_mix(long dim_m, long dim_n) {
-	char ciphers_file[] = "ciphers_0.json";
+	char ciphers_file[] = "ciphers.json";
 	// generate_ciphers(ciphers_file, dim_m, dim_n);
 	// mix(ciphers_file, dim_m, dim_n);
-	// Added external validation of mixing
-	// validate_mix(ciphers_file, dim_m, dim_n);
 }
 
 int main(int argc, char *argv[]) {

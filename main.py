@@ -70,7 +70,24 @@ def mix(m, n, ciphers_file, publics_file, proof_file, election_file):
     print("Mixed ciphers")
 
 def verify(m, n, ciphers_file, publics_file, proof_file):
-    pass
+    f = open(ciphers_file)
+    data = json(f)
+    f.close
+    g = data["generator"]
+    q = data["order"]
+    p = data["modulus"]
+    
+    b_ciphers = ciphers_file.encode("utf-8")
+    c_ciphers = c_char_p(b_ciphers)
+    c_m = c_long(m)
+    c_n = c_long(n)
+    b_g = str(g).encode("utf-8")
+    c_g = c_char_p(b_g)
+    b_q = str(q).encode("utf-8")
+    c_q = c_char_p(b_q)
+    b_p = str(p).encode("utf-8")
+    c_p = c_char_p(b_p)
+    lib.validate_mix(c_ciphers, c_m, c_n, c_g, c_q, c_p)
 
 if __name__ == "__main__":
     arg_len = len(sys.argv)
@@ -80,10 +97,10 @@ if __name__ == "__main__":
             print("Number of arguments incorrect, parameters set to default\n")
             m = 64
             n = 64
-            ciphers_file = "ciphers_0.json"
+            ciphers_file = "ciphers.json"
             publics_file = "public_randoms.txt"
             proof_file = "proof.txt"
-            election_file = "sample_1.json"
+            election_file = "sample.json"
         else:
             m = int(sys.argv[2])
             n = int(sys.argv[3])

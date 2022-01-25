@@ -567,8 +567,8 @@ int get_int_elem(int* arr, int i) {
  * @return true The mix was validated correctly
  * @return false The mix could not be validated
  */
-bool validate_mix(const char* ciphers_file, const long dim_m, const long dim_n) {
-	init();
+bool validate_mix(const char* ciphers_file, const long dim_m, const long dim_n, const char* g, const char* q, const char* p) {
+	init_specified(g, q, p);
 	
 	num[1] = dim_m;
 	num[2] = dim_n;
@@ -605,49 +605,6 @@ bool validate_mix(const char* ciphers_file, const long dim_m, const long dim_n) 
 }
 
 /**
- * @brief Writes Helios election data in the format expected by the mixnet
- * 
- * @param ciphers_file Filename where the elecction data will ve written
- * @param dim_m Number of rows in cipher matrix
- * @param dim_n Number of columns in cipher matrix
- * @return true The election data was read correctly
- * @return false The election data could not be read
- */
-bool read_election(const char * election_file, const char * ciphers_file,
-					const long dim_m, const long dim_n) {
-	init();
-
-	num[1] = dim_m;
-	num[2] = dim_n;
-
-	m = num[1];
-	long n = num[2];
-
-	check_usage(m, n);
-
-	// Read SECRET_SIZE, votes and options
-	// const long SECRET_SIZE = 618;
-	const long votes = 1;
-	const long options = 3;
-
-	// Read public from config (pk & G_q)
-	ElGammal* elgammal = (ElGammal*)create_pub_key(1);
-
-	CipherTable* ciphers = new CipherTable();
-
-	Functions::set_election_ciphers_from_file(election_file, ciphers,
-							m, n, votes, options);
-
-	Functions::write_crypto_ciphers_to_file(ciphers_file, "", "", ciphers, NULL,
-							elgammal, "", "", m, n);
-
-	delete ciphers;
-	delete elgammal;
-
-	return true;
-}
-
-/**
  * @brief Initializes the group
  * 
  * @param g group generator
@@ -678,9 +635,8 @@ void init_specified(const char* g, const char* q, const char* p) {
  * @param secret secret to be encrypted
  * @return long* alpha, beta array
  */
-unsigned long *encrypt_single_secret(long secret, long g, long q, long p) {
-	//init_specified(g, q, p);
-	init();
+unsigned long *encrypt_single_secret(long secret, const char* g, const char* q, const char* p) {
+	init_specified(g, q, p);
 	ElGammal* elgammal = (ElGammal*)create_pub_key(8);
 	Cipher_elg cipher = Functions::createSingleCipher(to_ZZ(secret), elgammal);
 	CurvePoint u = cipher.get_u();
