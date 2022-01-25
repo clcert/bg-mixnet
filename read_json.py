@@ -31,7 +31,7 @@ def mix(filename, m, n):
     return fun(c_filename, c_m, c_n)
 
 def main(m, n, lib):
-    f = open("encryptions.json")
+    f = open("sample.json")
     data = json.load(f)
     f.close()
 
@@ -49,7 +49,7 @@ def main(m, n, lib):
 
     for i in range(len(ciphers), m*n):
         # ElGammal encryption of the string "Inval"
-        inval = elg_encrypt(data["invalid"], g, q, p)
+        inval = elg_encrypt(data["valueForPadding"], g, q, p)
         ciphers.append(
             [int(inval[0]), int(inval[1])]
         )

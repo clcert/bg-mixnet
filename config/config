@@ -29,7 +29,7 @@
 4
 
 # Types of groups uses.
-#  0 the same modular group G is used for the commitments and the encryption
+# 0 the same modular group G is used for the commitments and the encryption
 # 1 the commitments are calculated in G subset Z_p_1 with order q and the encryption in H subset Z_p_2 with order q
 0
 

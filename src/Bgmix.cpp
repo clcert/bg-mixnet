@@ -686,6 +686,5 @@ unsigned long *encrypt_single_secret(long secret, long g, long q, long p) {
 	unsigned long *ret = new unsigned long[2];
 	ret[0] = to_ulong(u.zz);
 	ret[1] = to_ulong(v.zz);
-	cout << ret[0] << " , " << ret[1] << endl;
 	return ret;
 }

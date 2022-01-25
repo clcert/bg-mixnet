@@ -1039,8 +1039,10 @@ Cipher_elg Functions::createSingleCipher(ZZ secret, ElGammal* enc_key) {
 	ZZ ord = H.get_ord();
 	ZZ ran_2 = RandomBnd(ord);
 	Cipher_elg temp;
+	CurvePoint s;
+	s.zz = secret;
 	Mod_p ran_1;
-	ran_1 = H.map_to_group_element(secret);
+	ran_1 = Mod_p(s, G.get_mod());
 	temp = enc_key->encrypt(ran_1, ran_2);
 	return temp;
 }
