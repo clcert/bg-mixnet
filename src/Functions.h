@@ -33,6 +33,8 @@ public:
 
 	// Added public_randoms
 	static void write_crypto_ciphers_to_file(const char *ciphers_file,
+						const char *publics_file,
+						const char *proof_file,
 						CipherTable *ciphers,
 						CipherTable *mixed_ciphers,
 						ElGammal *elgammal, string proof,

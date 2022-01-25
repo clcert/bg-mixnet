@@ -12,7 +12,8 @@ extern "C" {
 void hello();
 
 bool generate_ciphers(const char * ciphers_file, const long dim_m, const long dim_n);
-bool mix(const char * ciphers_file, const long dim_m, const long dim_n);
+bool mix(const char * ciphers_file, const char * publics_file, const char * proof_file, const long dim_m, const long dim_n,
+        const char* g, const char* q, const char* p);
 // Added external validation of mixing
 bool validate_mix(const char * ciphers_file, const long dim_m, const long dim_n);
 bool read_election(const char * election_file, const char * ciphers_file, const long dim_m, const long dim_n);
@@ -40,7 +41,7 @@ void delete_key(void* elgammal);
 
 /******************* Interface ********************/
 void init();
-void init_specified(long g, long q, long p);
+void init_specified(const char* g, const char* q, const char* p);
 void* elg_encrypt(void** secrets, int secretLen, int arrayLen, int keyIndex);
 void* get_ciphertexts(void* cipher_table, void* len, void* elmenent_size);
 void* get_element(void* cipher_table, int index, void* len);

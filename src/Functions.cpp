@@ -122,11 +122,14 @@ void Functions::read_config(const string& name, vector<long> & num, ZZ & genq){
 }
 
 // Added public_randoms
-void Functions::write_crypto_ciphers_to_file(const char *ciphers_file, CipherTable *ciphers,
+void Functions::write_crypto_ciphers_to_file(const char *ciphers_file, 
+					const char *publics_file,
+					const char *proof_file,
+					CipherTable *ciphers,
 					CipherTable *mixed_ciphers, ElGammal *elgammal,
 					string proof, string public_randoms, long m, long n) {
 	ofstream ofciphers;
-	ofciphers.open(ciphers_file);
+	ofciphers.open(ciphers_file, ofstream::trunc);
 	if (ofciphers.fail()) {
 		cout << "cannot open ciphers file " << ciphers_file <<endl;
 		exit(1); // TODO should probably raise an exception
@@ -135,17 +138,13 @@ void Functions::write_crypto_ciphers_to_file(const char *ciphers_file, CipherTab
 
 	ofciphers << "{";
 	ofciphers << "\"generator\": " << group.get_gen();
-	ofciphers << ", ";
+	ofciphers << ",\n";
 	ofciphers << "\"modulus\": " << group.get_mod();
-	ofciphers << ", ";
+	ofciphers << ",\n";
 	ofciphers << "\"order\": " << group.get_ord();
-	ofciphers << ", ";
+	ofciphers << ",\n";
 	ofciphers << "\"public\": " << elgammal->get_pk();
-	ofciphers << ", ";
-	ofciphers << "\"public_randoms\": \"" << public_randoms;
-	ofciphers << "\", ";
-	ofciphers << "\"proof\": \"" << proof;
-	ofciphers << "\", ";
+	ofciphers << ",\n";
 	ofciphers << "\"original_ciphers\": [";
 	for (int i = 0; i < m; i++)
 		for (int j = 0; j < n; j++) {
@@ -154,7 +153,7 @@ void Functions::write_crypto_ciphers_to_file(const char *ciphers_file, CipherTab
 				ofciphers << ", ";
 			//cout << "cipher " << i << " " << j << " : " << ciphers->getCipher(i, j) << endl;
 		}
-        ofciphers << "],";
+        ofciphers << "],\n";
         ofciphers << "\"mixed_ciphers\": [";
 	if (mixed_ciphers != NULL) {
 		for (int i = 0; i < m; i++)
@@ -165,8 +164,26 @@ void Functions::write_crypto_ciphers_to_file(const char *ciphers_file, CipherTab
 				//cout << "cipher " << i << " " << j << " : " << ciphers->getCipher(i, j) << endl;
 			}
 	}
-        ofciphers << "]";
+        ofciphers << "]\n";
         ofciphers << "}";
+	ofciphers.close();
+
+	// Pedersen commitment generators
+	ofciphers.open(publics_file, ofstream::trunc);
+	if (ofciphers.fail()) {
+		cout << "cannot open publics file " << publics_file <<endl;
+		exit(1);
+	}
+	ofciphers << public_randoms;
+	ofciphers.close();
+
+	// NIZK proof
+	ofciphers.open(proof_file, ofstream::trunc);
+	if (ofciphers.fail()) {
+		cout << "cannot open proof file " << proof_file <<endl;
+		exit(1);
+	}
+	ofciphers << proof;
 	ofciphers.close();
 }
 

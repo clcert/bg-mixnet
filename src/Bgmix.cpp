@@ -407,7 +407,7 @@ bool generate_ciphers(const char* ciphers_file, const long dim_m, const long dim
 	time_t enc_time = time(NULL);
 	cout << "encryption time: " << enc_time - begin << endl; 
 
-	Functions::write_crypto_ciphers_to_file(ciphers_file, ciphers, NULL,
+	Functions::write_crypto_ciphers_to_file(ciphers_file, "", "", ciphers, NULL,
 							elgammal, "", "", m, n);
 
 	for (int i = 0; i < m * n; i++) {
@@ -456,7 +456,8 @@ int verify(void *elgammal, string &proof, void* ciphers_in, void* post_shuffle_c
 	return 0;
 }
 
-bool mix(const char* ciphers_file, const long dim_m, const long dim_n) {
+bool mix(const char* ciphers_file, const char* publics_file, const char* proof_file, const long dim_m, const long dim_n,
+		const char* g, const char* q, const char* p) {
 #ifdef LOG_CRYPTO_OUTPUT
         // log file specified in config
 	ofstream log(LOG_CRYPTO_OUTPUT, ofstream::out | ofstream::app);
@@ -464,7 +465,7 @@ bool mix(const char* ciphers_file, const long dim_m, const long dim_n) {
         redirect_streams_to_log(log, &saved_cout, &saved_cerr);
 	cout << __func__ << "(): Log messages in file " << LOG_CRYPTO_OUTPUT << endl;
 #endif
-	init();
+	init_specified(g, q, p);
 	// Override config file's cipher matrix dimensions
 	num[1] = dim_m;
 	num[2] = dim_n;
@@ -503,8 +504,8 @@ bool mix(const char* ciphers_file, const long dim_m, const long dim_n) {
 	cout << "verification is done! In " << time(NULL) - verify_time << endl;
 	cout << "Shuffle + prove + verify = " << time(NULL) - shuffle_time << endl;
 
-	// Added public randoms
-	Functions::write_crypto_ciphers_to_file(ciphers_file, input_ciphers,
+	// Added public randoms, changes file output
+	Functions::write_crypto_ciphers_to_file(ciphers_file, publics_file, proof_file, input_ciphers,
 						shuffled_ciphers, elgammal, proof, public_randoms, m, n);
 	delete elgammal;
 	delete input_ciphers;
@@ -637,7 +638,7 @@ bool read_election(const char * election_file, const char * ciphers_file,
 	Functions::set_election_ciphers_from_file(election_file, ciphers,
 							m, n, votes, options);
 
-	Functions::write_crypto_ciphers_to_file(ciphers_file, ciphers, NULL,
+	Functions::write_crypto_ciphers_to_file(ciphers_file, "", "", ciphers, NULL,
 							elgammal, "", "", m, n);
 
 	delete ciphers;
@@ -653,7 +654,7 @@ bool read_election(const char * election_file, const char * ciphers_file,
  * @param q group order
  * @param p group modulus
  */
-void init_specified(long g, long q, long p) {
+void init_specified(const char* g, const char* q, const char* p) {
 	lock_guard<mutex> guard(gInitMutex);
 
 	if (kIsInit) return;
@@ -678,6 +679,7 @@ void init_specified(long g, long q, long p) {
  * @return long* alpha, beta array
  */
 unsigned long *encrypt_single_secret(long secret, long g, long q, long p) {
+	//init_specified(g, q, p);
 	init();
 	ElGammal* elgammal = (ElGammal*)create_pub_key(8);
 	Cipher_elg cipher = Functions::createSingleCipher(to_ZZ(secret), elgammal);

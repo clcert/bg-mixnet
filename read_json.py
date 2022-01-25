@@ -5,88 +5,100 @@ import sys
 from collections import OrderedDict
 from ctypes import (
     cdll,
-    c_bool,
     c_char_p,
     c_long,
-    c_ulong,
-    POINTER
 )
 
-def elg_encrypt(secret, g, q, p):
-    c_secret = c_long(secret)
-    c_g = c_long(g)
-    c_q = c_long(q)
-    c_p = c_long(p)
-    fun = lib._Z21encrypt_single_secretllll
-    fun.restype = POINTER(c_ulong * 2)
-    return [i for i in fun(c_secret, c_g, c_q, c_p).contents]
-
-def mix(filename, m, n):
-    b_filename = filename.encode("utf-8")
-    c_filename = c_char_p(b_filename)
-    c_m = c_long(m)
-    c_n = c_long(n)
-    fun = lib.mix
-    fun.restype = c_bool
-    return fun(c_filename, c_m, c_n)
-
-def main(m, n, lib):
-    f = open("sample.json")
+def mix(m, n, ciphers_file, publics_file, proof_file, election_file):
+    f = open(election_file)
     data = json.load(f)
     f.close()
 
     ciphers = []
 
+    # Add real ElGammal pairs
     for choice in data["cipherTexts"]:
         alpha = int(choice["alpha"])
         beta = int(choice["beta"])
-        ciphers.append([alpha, beta])
+        ciphers.append([
+            alpha, beta
+        ])
+
+    alpha_pad = int(data["ciphertextForPadding"]["alpha"])
+    beta_pad = int(data["ciphertextForPadding"]["beta"])
+
+    for _ in range(len(ciphers), m*n):
+        # ElGammal encryption of the string "Inval"
+        ciphers.append([
+            alpha_pad, beta_pad
+        ])
 
     key = data["publicKey"]
     g = int(key["g"])
     q = int(key["q"])
     p = int(key["p"])
 
-    for i in range(len(ciphers), m*n):
-        # ElGammal encryption of the string "Inval"
-        inval = elg_encrypt(data["valueForPadding"], g, q, p)
-        ciphers.append(
-            [int(inval[0]), int(inval[1])]
-        )
-
     od = OrderedDict()
-    od["generator"] =  g
+    od["generator"] = g
     od["modulus"] = p
     od["order"] = q
     od["public"] = int(key["y"])
-    od["public_randoms"] = ""
-    od["proof"] = ""
     od["original_ciphers"] = ciphers.__str__()
 
-    filename = "ciphers_0.json"
-
-    f = open(filename, "w")
+    f = open(ciphers_file, "w")
     json.dump(od, f)
     f.close
 
     print("Created file")
     
-    if os.system(f"./bgmix {m} {n}") == 0:
-        print("Mix finished")
-    else:
-        print("Library call failed")
+    b_ciphers = ciphers_file.encode("utf-8")
+    c_ciphers = c_char_p(b_ciphers)
+    b_publics = publics_file.encode("utf-8")
+    c_publics = c_char_p(b_publics)
+    b_proof = proof_file.encode("utf-8")
+    c_proof = c_char_p(b_proof)
+    c_m = c_long(m)
+    c_n = c_long(n)
+    b_g = str(g).encode("utf-8")
+    c_g = c_char_p(b_g)
+    b_q = str(q).encode("utf-8")
+    c_q = c_char_p(b_q)
+    b_p = str(p).encode("utf-8")
+    c_p = c_char_p(b_p)
+    lib.mix(c_ciphers, c_publics, c_proof, c_m, c_n, c_g, c_q, c_p)
+
+    print("Mixed ciphers")
+
+def verify(m, n, ciphers_file, publics_file, proof_file):
+    pass
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
-        print("Number of arguments incorrect, dimension set to m=64, n=64\n")
-        m = 64
-        n = 64
-    else:
-        m = int(sys.argv[1])
-        n = int(sys.argv[2])
+    arg_len = len(sys.argv)
+    if arg_len > 1:
+        mode = sys.argv[1]
+        if (mode == "mix" and arg_len != 8) or (mode == "verify" and arg_len != 7):
+            print("Number of arguments incorrect, parameters set to default\n")
+            m = 64
+            n = 64
+            ciphers_file = "ciphers_0.json"
+            publics_file = "public_randoms.txt"
+            proof_file = "proof.txt"
+            election_file = "sample_1.json"
+        else:
+            m = int(sys.argv[2])
+            n = int(sys.argv[3])
+            ciphers_file = sys.argv[4]
+            publics_file = sys.argv[5]
+            proof_file = sys.argv[6]
+            if mode == "mix":
+                election_file = sys.argv[7]
 
     if os.system("make") == 0:
-        lib = cdll.LoadLibrary("./libbgmix.so")
-        main(m, n, lib)
+        lib = cdll.LoadLibrary("libbgmix.so")
     else:
         print("Compilation failed")
+
+    if mode == "mix":
+        mix(m, n, ciphers_file, publics_file, proof_file, election_file)
+    elif mode == "verify":
+        verify(m, n, ciphers_file, publics_file, proof_file)
