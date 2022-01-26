@@ -35,4 +35,5 @@ bgmix
 library_setup.sh
 *.json
 *.txt
+!requirements.txt
 .python-version
