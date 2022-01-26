@@ -71,7 +71,7 @@ def mix(m, n, ciphers_file, publics_file, proof_file, election_file):
 
 def verify(m, n, ciphers_file, publics_file, proof_file):
     f = open(ciphers_file)
-    data = json(f)
+    data = json.load(f)
     f.close
     g = data["generator"]
     q = data["order"]
@@ -79,6 +79,10 @@ def verify(m, n, ciphers_file, publics_file, proof_file):
     
     b_ciphers = ciphers_file.encode("utf-8")
     c_ciphers = c_char_p(b_ciphers)
+    b_publics = publics_file.encode("utf-8")
+    c_publics = c_char_p(b_publics)
+    b_proof = proof_file.encode("utf-8")
+    c_proof = c_char_p(b_proof)
     c_m = c_long(m)
     c_n = c_long(n)
     b_g = str(g).encode("utf-8")
@@ -87,28 +91,36 @@ def verify(m, n, ciphers_file, publics_file, proof_file):
     c_q = c_char_p(b_q)
     b_p = str(p).encode("utf-8")
     c_p = c_char_p(b_p)
-    lib.validate_mix(c_ciphers, c_m, c_n, c_g, c_q, c_p)
+    lib.validate_mix(c_ciphers, c_publics, c_proof, c_m, c_n, c_g, c_q, c_p)
 
 if __name__ == "__main__":
+    modes = {"mix": 8, "verify": 7}
     arg_len = len(sys.argv)
     if arg_len > 1:
         mode = sys.argv[1]
-        if (mode == "mix" and arg_len != 8) or (mode == "verify" and arg_len != 7):
-            print("Number of arguments incorrect, parameters set to default\n")
-            m = 64
-            n = 64
-            ciphers_file = "ciphers.json"
-            publics_file = "public_randoms.txt"
-            proof_file = "proof.txt"
-            election_file = "sample.json"
+        if mode in modes:
+            if arg_len != modes[mode]:
+                print("Number of arguments incorrect, parameters set to default\n")
+                m = 64
+                n = 64
+                ciphers_file = "ciphers.json"
+                publics_file = "public_randoms.txt"
+                proof_file = "proof.txt"
+                election_file = "sample.json"
+            else:
+                m = int(sys.argv[2])
+                n = int(sys.argv[3])
+                ciphers_file = sys.argv[4]
+                publics_file = sys.argv[5]
+                proof_file = sys.argv[6]
+                if mode == "mix":
+                    election_file = sys.argv[7]
         else:
-            m = int(sys.argv[2])
-            n = int(sys.argv[3])
-            ciphers_file = sys.argv[4]
-            publics_file = sys.argv[5]
-            proof_file = sys.argv[6]
-            if mode == "mix":
-                election_file = sys.argv[7]
+            exep = f"Mode {mode} unknown, select from [{', '.join(modes)}]"
+            raise Exception(exep)
+    else:
+        exep = f"Specify usage mode from [{', '.join(modes)}]"
+        raise Exception(exep)
 
     if os.system("make") == 0:
         lib = cdll.LoadLibrary("libbgmix.so")

@@ -146,26 +146,30 @@ void Functions::write_crypto_ciphers_to_file(const char *ciphers_file,
 	ofciphers << "\"public\": " << elgammal->get_pk();
 	ofciphers << ",\n";
 	ofciphers << "\"original_ciphers\": [";
-	for (int i = 0; i < m; i++)
+	
+	for (int i = 0; i < m; i++) {
 		for (int j = 0; j < n; j++) {
 			ofciphers << ciphers->getCipher(i, j);
 			if (!(i == m-1 && j == n-1))
 				ofciphers << ", ";
 			//cout << "cipher " << i << " " << j << " : " << ciphers->getCipher(i, j) << endl;
 		}
-        ofciphers << "],\n";
-        ofciphers << "\"mixed_ciphers\": [";
+	}
+    ofciphers << "],\n";
+
+    ofciphers << "\"mixed_ciphers\": [";
 	if (mixed_ciphers != NULL) {
-		for (int i = 0; i < m; i++)
+		for (int i = 0; i < m; i++) {
 			for (int j = 0; j < n; j++) {
 				ofciphers << mixed_ciphers->getCipher(i, j);
 				if (!(i == m-1 && j == n-1))
 					ofciphers << ", ";
 				//cout << "cipher " << i << " " << j << " : " << ciphers->getCipher(i, j) << endl;
 			}
+		}
 	}
-        ofciphers << "]\n";
-        ofciphers << "}";
+    ofciphers << "]\n";
+    ofciphers << "}";
 	ofciphers.close();
 
 	// Pedersen commitment generators
@@ -886,6 +890,8 @@ void parse_proof(ifstream& ifciphers, string& proof,
  * @return ** ElGammal* ElGammal object setted up to the specified configuration
  */
 ElGammal* Functions::set_validation_vars_from_json(const char *ciphers_file,
+			const char *publics_file,
+			const char *proof_file,
 			vector<vector<Cipher_elg>* >& IC,
 			vector<vector<Cipher_elg>* >& SC,
 			const long m, const long n, 
@@ -904,8 +910,7 @@ ElGammal* Functions::set_validation_vars_from_json(const char *ciphers_file,
 		{"generator", ""},
 		{"order", ""},
 		{"modulus", ""},
-		{"public", ""},
-		{"public_randoms", ""}
+		{"public", ""}
 	};
 	bool passedby_ciphers = false;
 	extract_fill_crypto(ifciphers, crypto, passedby_ciphers);
@@ -931,15 +936,6 @@ ElGammal* Functions::set_validation_vars_from_json(const char *ciphers_file,
 	is_pk >> pk;
 	elgammal->set_pk(pk);
 
-	pubv = crypto["public_randoms"];
-
-	string _proof("proof");
-	if (!find_json_key(ifciphers, _proof)) {
-		cerr << "Key 'proof' not found in JSON file" << endl;
-		exit(1);
-	}
-	parse_proof(ifciphers, proof, m, n);
-
 	string original_ciphers("original_ciphers");
 	if (!find_json_key(ifciphers, original_ciphers)) {
 		cerr << "Key 'original_ciphers' not found in JSON file" << endl;
@@ -953,6 +949,28 @@ ElGammal* Functions::set_validation_vars_from_json(const char *ciphers_file,
 		exit(1);
 	}
 	parse_cipher_matrix(ifciphers, SC, m, n);
+
+	ifciphers.close();
+
+	ifciphers.open(publics_file);
+	if (ifciphers.fail()) {
+		cerr << "cannot open ciphers file " << publics_file <<endl;
+		exit(1);
+	}
+	ostringstream pubvss;
+	pubvss << ifciphers.rdbuf();
+	pubv = pubvss.str();
+
+	ifciphers.close();
+
+	ifciphers.open(proof_file);
+	if (ifciphers.fail()) {
+		cerr << "cannot open ciphers file " << proof_file <<endl;
+		exit(1);
+	}
+	ostringstream proofss;
+	proofss << ifciphers.rdbuf();
+	proof = proofss.str();
 
 	ifciphers.close();
 

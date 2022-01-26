@@ -44,6 +44,8 @@ public:
 						 const long m, const long n);
 	// Added reading for proof and commitment generators
 	static ElGammal* set_validation_vars_from_json(const char * ciphers_file,
+						 const char * publics_file,
+						 const char * proof_file,
 						 vector<vector<Cipher_elg>* >& IC,
 						 vector<vector<Cipher_elg>* >& SC,
 						 const long m, const long n, 

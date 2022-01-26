@@ -437,16 +437,22 @@ void prove(void *cache_data, string &proof, string &pubv) {
         delete P;
 }
 
-int verify(void *elgammal, string &proof, void* ciphers_in, void* post_shuffle_cipehrs, string &public_randoms) {
-	init();
+int verify(void *elgammal, string &proof, void* ciphers_in, void* post_shuffle_cipehrs, string &public_randoms,
+			const char* g, const char* q, const char* p) {
+	init_specified(g, q, p);
 	CipherTable *c = (CipherTable *)ciphers_in;
 	CipherTable *C = (CipherTable *)post_shuffle_cipehrs;
-
+	
 	if ((c->rows() != C->rows()) || (c->cols() != C->cols())) {
 		return false;
 	}
 
 	istringstream respstream(public_randoms);
+	// Replication of RemoteShuffler initialization's global effect
+	extern long mu;
+	extern long mu_h;
+	mu = 4;
+	mu_h = 2*mu-1;
 
 	VerifierClient V(num, C->rows(), C->cols(), c->getCMatrix(), C->getCMatrix(), (ElGammal*)elgammal, false, true);
 	V.set_public_vector(respstream, c->cols(), num[3], num[7], num[4]);
@@ -500,7 +506,7 @@ bool mix(const char* ciphers_file, const char* publics_file, const char* proof_f
 	cout << "Proof is done! In " << time(NULL) - prove_time << endl;
 
 	time_t verify_time = time(NULL);
-	int ret = verify(elgammal, proof, input_ciphers, shuffled_ciphers, public_randoms);
+	int ret = verify(elgammal, proof, input_ciphers, shuffled_ciphers, public_randoms, g, q, p);
 	cout << "verification is done! In " << time(NULL) - verify_time << endl;
 	cout << "Shuffle + prove + verify = " << time(NULL) - shuffle_time << endl;
 
@@ -567,7 +573,8 @@ int get_int_elem(int* arr, int i) {
  * @return true The mix was validated correctly
  * @return false The mix could not be validated
  */
-bool validate_mix(const char* ciphers_file, const long dim_m, const long dim_n, const char* g, const char* q, const char* p) {
+bool validate_mix(const char* ciphers_file, const char* publics_file, const char* proof_file,
+					const long dim_m, const long dim_n, const char* g, const char* q, const char* p) {
 	init_specified(g, q, p);
 	
 	num[1] = dim_m;
@@ -590,11 +597,12 @@ bool validate_mix(const char* ciphers_file, const long dim_m, const long dim_n, 
 	string public_randoms;
 
 	// Read from file
-	ElGammal *elgammal = Functions::set_validation_vars_from_json(ciphers_file, *cm_in, *cm_sh, m, n, proof, public_randoms);
+	ElGammal *elgammal = Functions::set_validation_vars_from_json(ciphers_file, publics_file, proof_file,
+								*cm_in, *cm_sh, m, n, proof, public_randoms);
 
 	// Run verification
-	int ret = verify(elgammal, proof, input_ciphers, shuffled_ciphers, public_randoms);
-	
+	int ret = verify(elgammal, proof, input_ciphers, shuffled_ciphers, public_randoms, g, q, p);
+
 	if (ret) {
 		cout << "everything passed!" <<endl;
 	} else {

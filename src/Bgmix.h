@@ -15,7 +15,8 @@ bool generate_ciphers(const char * ciphers_file, const long dim_m, const long di
 bool mix(const char * ciphers_file, const char * publics_file, const char * proof_file, const long dim_m, const long dim_n,
         const char* g, const char* q, const char* p);
 // Added external validation of mixing
-bool validate_mix(const char * ciphers_file, const long dim_m, const long dim_n);
+bool validate_mix(const char* ciphers_file, const char* publics_file, const char* proof_file,
+                const long dim_m, const long dim_n, const char* g, const char* q, const char* p);
 bool read_election(const char * election_file, const char * ciphers_file, const long dim_m, const long dim_n);
 
 #include <stdint.h>
@@ -71,10 +72,10 @@ void* shuffle_internal(void* reenc_key,
                        int number_of_elements,
                        void* input_ciphers,
                        int** permutation, int* permutation_len);
+
+unsigned long *encrypt_single_secret(long secret, const char* g, const char* q, const char* p);
 #ifdef __cplusplus
 }
 #endif
 
 #endif
-
-long *encrypt_single_secret(long secret);
