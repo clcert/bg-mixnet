@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Verify</title>
+    </head>
+    <body>
+        <form method="POST" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="m">Rows</label>
+                <input type="text" name="m" placeholder="Number of rows" class="form-control" value="{{ request.form['m'] }}" />
+            </div>
+
+            <div class="form-group">
+                <label for="n">Columns</label>
+                <input type="text" name="n" placeholder="Number of columns" class="form-control" value="{{ request.form['n'] }}" />
+            </div>
+
+            <div class="form-group">
+                <label for="ciphers_file">Input File</label>
+                <input type="file" name="ciphers_file" placeholder="Ciphers file" class="form-control" accept=".json"/>
+            </div>
+
+            <div class="form-group">
+                <label for="publics_file">Public Randoms</label>
+                <input type="file" name="publics_file" placeholder="Public randoms" class="form-control" accept=".txt"/>
+            </div>
+
+            <div class="form-group">
+                <label for="proof_file">Proof</label>
+                <input type="file" name="proof_file" placeholder="Proof" class="form-control" accept=".txt"/>
+            </div>
+
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary" value="Upload">Submit</button>
+            </div>
+        </form>
+    </body>
+</html>

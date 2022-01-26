@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Mix</title>
+    </head>
+    <body>
+        <form method="POST" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="m">Rows</label>
+                <input type="text" name="m" placeholder="Number of rows" class="form-control" value="{{ request.form['m'] }}" />
+            </div>
+
+            <div class="form-group">
+                <label for="n">Columns</label>
+                <input type="text" name="n" placeholder="Number of columns" class="form-control" value="{{ request.form['n'] }}" />
+            </div>
+
+            <div class="form-group">
+                <label for="election_file">Input File</label>
+                <input type="file" name="election_file" placeholder="Input file" class="form-control" accept=".json"/>
+            </div>
+
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary" value="Upload">Submit</button>
+            </div>
+        </form>
+    </body>
+</html>

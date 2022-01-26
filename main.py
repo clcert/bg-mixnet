@@ -5,11 +5,12 @@ import sys
 from collections import OrderedDict
 from ctypes import (
     cdll,
+    c_bool,
     c_char_p,
     c_long,
 )
 
-def mix(m, n, ciphers_file, publics_file, proof_file, election_file):
+def mix(m, n, ciphers_file, publics_file, proof_file, election_file) -> None:
     f = open(election_file)
     data = json.load(f)
     f.close()
@@ -50,6 +51,8 @@ def mix(m, n, ciphers_file, publics_file, proof_file, election_file):
     f.close
 
     print("Created file")
+
+    lib = cdll.LoadLibrary("libbgmix.so")
     
     b_ciphers = ciphers_file.encode("utf-8")
     c_ciphers = c_char_p(b_ciphers)
@@ -69,13 +72,15 @@ def mix(m, n, ciphers_file, publics_file, proof_file, election_file):
 
     print("Mixed ciphers")
 
-def verify(m, n, ciphers_file, publics_file, proof_file):
+def verify(m, n, ciphers_file, publics_file, proof_file) -> bool:
     f = open(ciphers_file)
     data = json.load(f)
     f.close
     g = data["generator"]
     q = data["order"]
     p = data["modulus"]
+
+    lib = cdll.LoadLibrary("libbgmix.so")
     
     b_ciphers = ciphers_file.encode("utf-8")
     c_ciphers = c_char_p(b_ciphers)
@@ -91,7 +96,10 @@ def verify(m, n, ciphers_file, publics_file, proof_file):
     c_q = c_char_p(b_q)
     b_p = str(p).encode("utf-8")
     c_p = c_char_p(b_p)
-    lib.validate_mix(c_ciphers, c_publics, c_proof, c_m, c_n, c_g, c_q, c_p)
+
+    fun = lib.validate_mix
+    fun.restype = c_bool
+    return fun(c_ciphers, c_publics, c_proof, c_m, c_n, c_g, c_q, c_p)
 
 if __name__ == "__main__":
     modes = {"mix": 8, "verify": 7}
@@ -122,9 +130,7 @@ if __name__ == "__main__":
         exep = f"Specify usage mode from [{', '.join(modes)}]"
         raise Exception(exep)
 
-    if os.system("make") == 0:
-        lib = cdll.LoadLibrary("libbgmix.so")
-    else:
+    if os.system("make") == -1:
         print("Compilation failed")
 
     if mode == "mix":
