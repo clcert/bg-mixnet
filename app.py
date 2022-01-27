@@ -6,7 +6,9 @@ from flask import (
     request,
     url_for
 )
+from os import makedirs
 from os.path import (
+    exists,
     join as p_join,
     realpath,
     split as p_split
@@ -25,6 +27,10 @@ app = Flask(__name__)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 app.secret_key = b"example"
 
+def check_upfolder():
+    if not exists(UPLOAD_FOLDER):
+        makedirs(UPLOAD_FOLDER)
+
 def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
@@ -40,9 +46,11 @@ def validate_files(file_dict):
 def index():
     return "Try /mix or /verify"
 
+#TODO: offer download of output files
 @app.route("/mix", methods=("GET", "POST"))
 def mix():
     if request.method == "POST":
+        check_upfolder()
         m = int(request.form["m"])
         n = int(request.form["n"])
         election_file = request.files["election_file"]
@@ -55,9 +63,12 @@ def mix():
 
     return render_template("mix.html")
 
+#TODO: add in browser feedback
+#TODO: debug verification
 @app.route("/verify", methods=("GET", "POST"))
 def verify():
     if request.method == "POST":
+        check_upfolder()
         m = int(request.form["m"])
         n = int(request.form["n"])
         files = {}

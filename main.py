@@ -18,7 +18,7 @@ def make() -> None:
         raise Exception("Compilation failed")
     
     dir_path = p_split(realpath(__file__))[0]
-    if system(f"export LD_LIBRARY_PATH={dir_path}") == -1:
+    if system(f"export LD_LIBRARY_PATH=/usr/local/lib:{dir_path}") == -1:
         raise Exception("Library linking failed")
 
 def mix(m, n, ciphers_file, publics_file, proof_file, election_file) -> None:
