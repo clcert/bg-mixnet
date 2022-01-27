@@ -35,5 +35,14 @@
                 <button type="submit" class="btn btn-primary" value="Upload">Submit</button>
             </div>
         </form>
+        {% if data.show %}
+        <div>
+            {% if data.valid %}
+            <h1>Verification successful</h1>
+            {% else %}
+            <h1>Verification failed</h1>
+            {% endif %}
+        </div>
+        {% endif %}
     </body>
 </html>

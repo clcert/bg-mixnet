@@ -59,11 +59,18 @@ def mix():
             path = p_join(app.config["UPLOAD_FOLDER"], filename)
             election_file.save(path)
             f_mix(m, n, "data/ciphers.json", "data/public_randoms.txt", "data/proof.txt", path)
-            return redirect(url_for('index'))
+            return redirect(url_for('result'))
 
     return render_template("mix.html")
 
-#TODO: add in browser feedback
+@app.route("/result")
+def result():
+    return render_template("result.html")
+
+@app.route("/download/<path:filename>")
+def download():
+    pass
+
 #TODO: debug verification
 @app.route("/verify", methods=("GET", "POST"))
 def verify():
@@ -82,14 +89,14 @@ def verify():
                 paths[key] = p_join(app.config["UPLOAD_FOLDER"], filename)
                 files[key].save(paths[key])
 
-            valid = f_verify(m, n, paths["ciphers"], paths["publics"], paths["proof"])
-            if valid:
-                flash("Validation successful")
-            else:
-                flash("Validation failed")
-            redirect(url_for('index'))
+            data = {
+                "valid": f_verify(m, n, paths["ciphers"], paths["publics"], paths["proof"]),
+                "show": True
+            }
+            return render_template("verify.html", data=data)
 
-    return render_template("verify.html")
+    data = {"valid": False, "show": False}
+    return render_template("verify.html", data=data)
 
 if __name__ == "__main__":
     app.run(host="127.0.0.1", port=8080, debug=True)

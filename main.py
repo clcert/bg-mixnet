@@ -22,7 +22,7 @@ def make() -> None:
         raise Exception("Library linking failed")
 
 def mix(m, n, ciphers_file, publics_file, proof_file, election_file) -> None:
-    make()
+    #make()
 
     f = open(election_file)
     data = json.load(f)
@@ -94,7 +94,7 @@ def mix(m, n, ciphers_file, publics_file, proof_file, election_file) -> None:
     print("Mixed ciphers")
 
 def verify(m, n, ciphers_file, publics_file, proof_file) -> bool:
-    make()
+    #make()
 
     f = open(ciphers_file)
     data = json.load(f)
