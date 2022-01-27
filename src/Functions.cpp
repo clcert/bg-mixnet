@@ -137,13 +137,13 @@ void Functions::write_crypto_ciphers_to_file(const char *ciphers_file,
 	G_q group = elgammal->get_group();
 
 	ofciphers << "{";
-	ofciphers << "\"generator\": " << group.get_gen();
+	ofciphers << "\"g\": " << group.get_gen();
 	ofciphers << ",\n";
-	ofciphers << "\"modulus\": " << group.get_mod();
+	ofciphers << "\"q\": " << group.get_ord();
 	ofciphers << ",\n";
-	ofciphers << "\"order\": " << group.get_ord();
+	ofciphers << "\"p\": " << group.get_mod();
 	ofciphers << ",\n";
-	ofciphers << "\"public\": " << elgammal->get_pk();
+	ofciphers << "\"y\": " << elgammal->get_pk();
 	ofciphers << ",\n";
 	ofciphers << "\"original_ciphers\": [";
 	
@@ -907,10 +907,10 @@ ElGammal* Functions::set_validation_vars_from_json(const char *ciphers_file,
 	check_json_structure(ifciphers);
 
 	map<string, string> crypto {
-		{"generator", ""},
-		{"order", ""},
-		{"modulus", ""},
-		{"public", ""}
+		{"g", ""},
+		{"q", ""},
+		{"p", ""},
+		{"y", ""}
 	};
 	bool passedby_ciphers = false;
 	extract_fill_crypto(ifciphers, crypto, passedby_ciphers);
@@ -921,9 +921,9 @@ ElGammal* Functions::set_validation_vars_from_json(const char *ciphers_file,
 	}
 
 	CurvePoint generator =
-		zz_to_curve_pt(ZZ(NTL::conv<NTL::ZZ>(crypto["generator"].c_str())));
-	ZZ order = NTL::conv<NTL::ZZ>(crypto["order"].c_str());
-	ZZ modulus = NTL::conv<NTL::ZZ>(crypto["modulus"].c_str());
+		zz_to_curve_pt(ZZ(NTL::conv<NTL::ZZ>(crypto["g"].c_str())));
+	ZZ order = NTL::conv<NTL::ZZ>(crypto["q"].c_str());
+	ZZ modulus = NTL::conv<NTL::ZZ>(crypto["p"].c_str());
 
 	// Override the init() setup
 	G = G_q(generator, order, modulus);
@@ -932,7 +932,7 @@ ElGammal* Functions::set_validation_vars_from_json(const char *ciphers_file,
 	ElGammal* elgammal = new ElGammal();
 	elgammal->set_group(G);
 	Mod_p pk;
-	istringstream is_pk(crypto["public"]);
+	istringstream is_pk(crypto["y"]);
 	is_pk >> pk;
 	elgammal->set_pk(pk);
 

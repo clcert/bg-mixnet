@@ -65,7 +65,7 @@ def mix(m, n, ciphers_file, publics_file, proof_file, election_file) -> None:
 
     print("Created file")
 
-    lib = cdll.LoadLibrary("libbgmix.so")
+    lib = cdll.LoadLibrary("./libbgmix.so")
     
     b_ciphers = ciphers_file.encode("utf-8")
     c_ciphers = c_char_p(b_ciphers)
@@ -103,7 +103,7 @@ def verify(m, n, ciphers_file, publics_file, proof_file) -> bool:
     q = data["order"]
     p = data["modulus"]
 
-    lib = cdll.LoadLibrary("libbgmix.so")
+    lib = cdll.LoadLibrary("./libbgmix.so")
     
     b_ciphers = ciphers_file.encode("utf-8")
     c_ciphers = c_char_p(b_ciphers)

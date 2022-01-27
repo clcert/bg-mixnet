@@ -4,6 +4,7 @@ from flask import (
     redirect,
     render_template,
     request,
+    send_file,
     url_for
 )
 from os import makedirs
@@ -14,6 +15,7 @@ from os.path import (
     split as p_split
 )
 from werkzeug.utils import secure_filename
+from zipfile import ZipFile
 
 from main import (
     mix as f_mix,
@@ -58,18 +60,19 @@ def mix():
             filename = secure_filename(election_file.filename)
             path = p_join(app.config["UPLOAD_FOLDER"], filename)
             election_file.save(path)
-            f_mix(m, n, "data/ciphers.json", "data/public_randoms.txt", "data/proof.txt", path)
-            return redirect(url_for('result'))
+            outs = ["ciphers.json", "public_randoms.txt", "proof.txt"]
+            for out in outs:
+                out = p_join(app.config["UPLOAD_FOLDER"], out)
+            f_mix(m, n, outs[0], outs[1], outs[2], path)
+
+            res_path = p_join(app.config["UPLOAD_FOLDER"], "response.zip")
+            zipObj = ZipFile(res_path, "w")
+            for out in outs:
+                zipObj.write(out)
+            zipObj.close()
+            return send_file(res_path, mimetype="application/zip")
 
     return render_template("mix.html")
-
-@app.route("/result")
-def result():
-    return render_template("result.html")
-
-@app.route("/download/<path:filename>")
-def download():
-    pass
 
 #TODO: debug verification
 @app.route("/verify", methods=("GET", "POST"))
