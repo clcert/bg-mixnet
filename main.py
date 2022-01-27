@@ -1,7 +1,3 @@
-import json
-import os
-import sys
-
 from collections import OrderedDict
 from ctypes import (
     cdll,
@@ -9,8 +5,25 @@ from ctypes import (
     c_char_p,
     c_long,
 )
+import json
+from os import system
+from os.path import (
+    realpath,
+    split as p_split
+)
+import sys
+
+def make() -> None:
+    if system("make") == -1:
+        raise Exception("Compilation failed")
+    
+    dir_path = p_split(realpath(__file__))[0]
+    if system(f"export LD_LIBRARY_PATH={dir_path}") == -1:
+        raise Exception("Library linking failed")
 
 def mix(m, n, ciphers_file, publics_file, proof_file, election_file) -> None:
+    make()
+
     f = open(election_file)
     data = json.load(f)
     f.close()
@@ -70,9 +83,19 @@ def mix(m, n, ciphers_file, publics_file, proof_file, election_file) -> None:
     c_p = c_char_p(b_p)
     lib.mix(c_ciphers, c_publics, c_proof, c_m, c_n, c_g, c_q, c_p)
 
+    f = open(ciphers_file, "r")
+    data = f.read().replace('}', '', 1)
+    f.close()
+
+    f = open(ciphers_file, "w")
+    f.write(data)
+    f.close()
+
     print("Mixed ciphers")
 
 def verify(m, n, ciphers_file, publics_file, proof_file) -> bool:
+    make()
+
     f = open(ciphers_file)
     data = json.load(f)
     f.close
@@ -129,9 +152,6 @@ if __name__ == "__main__":
     else:
         exep = f"Specify usage mode from [{', '.join(modes)}]"
         raise Exception(exep)
-
-    if os.system("make") == -1:
-        print("Compilation failed")
 
     if mode == "mix":
         mix(m, n, ciphers_file, publics_file, proof_file, election_file)
