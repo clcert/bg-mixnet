@@ -48,7 +48,6 @@ def validate_files(file_dict):
 def index():
     return "Try /mix or /verify"
 
-#TODO: offer download of output files
 @app.route("/mix", methods=("GET", "POST"))
 def mix():
     if request.method == "POST":

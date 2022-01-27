@@ -332,10 +332,10 @@ ElGammal* Functions::set_crypto_ciphers_from_json(const char *ciphers_file,
 	check_json_structure(ifciphers);
 
 	map<string, string> crypto {
-		{"generator", ""},
-		{"order", ""},
-		{"modulus", ""},
-		{"public", ""}
+		{"g", ""},
+		{"q", ""},
+		{"p", ""},
+		{"y", ""}
 	};
 	bool passedby_ciphers = false;
 	extract_fill_crypto(ifciphers, crypto, passedby_ciphers);
@@ -353,9 +353,9 @@ ElGammal* Functions::set_crypto_ciphers_from_json(const char *ciphers_file,
         ZZ modulus = ZZ(NTL::conv<NTL::ZZ>("42"));
 #else
 	CurvePoint generator =
-		zz_to_curve_pt(ZZ(NTL::conv<NTL::ZZ>(crypto["generator"].c_str())));
-	ZZ order = NTL::conv<NTL::ZZ>(crypto["order"].c_str());
-	ZZ modulus = NTL::conv<NTL::ZZ>(crypto["modulus"].c_str());
+		zz_to_curve_pt(ZZ(NTL::conv<NTL::ZZ>(crypto["g"].c_str())));
+	ZZ order = NTL::conv<NTL::ZZ>(crypto["q"].c_str());
+	ZZ modulus = NTL::conv<NTL::ZZ>(crypto["p"].c_str());
 #endif
 	// Override the init() setup
 	G = G_q(generator, order, modulus);
@@ -364,7 +364,7 @@ ElGammal* Functions::set_crypto_ciphers_from_json(const char *ciphers_file,
 	ElGammal* elgammal = new ElGammal();
 	elgammal->set_group(G);
 	Mod_p pk;
-	istringstream is_pk(crypto["public"]);
+	istringstream is_pk(crypto["y"]);
 	is_pk >> pk;
 	elgammal->set_pk(pk);
 

@@ -53,10 +53,10 @@ def mix(m, n, ciphers_file, publics_file, proof_file, election_file) -> None:
     p = int(key["p"])
 
     od = OrderedDict()
-    od["generator"] = g
-    od["modulus"] = p
-    od["order"] = q
-    od["public"] = int(key["y"])
+    od["g"] = g
+    od["p"] = p
+    od["q"] = q
+    od["y"] = int(key["y"])
     od["original_ciphers"] = ciphers.__str__()
 
     f = open(ciphers_file, "w")
@@ -66,7 +66,7 @@ def mix(m, n, ciphers_file, publics_file, proof_file, election_file) -> None:
     print("Created file")
 
     lib = cdll.LoadLibrary("./libbgmix.so")
-    
+
     b_ciphers = ciphers_file.encode("utf-8")
     c_ciphers = c_char_p(b_ciphers)
     b_publics = publics_file.encode("utf-8")
@@ -99,9 +99,9 @@ def verify(m, n, ciphers_file, publics_file, proof_file) -> bool:
     f = open(ciphers_file)
     data = json.load(f)
     f.close
-    g = data["generator"]
-    q = data["order"]
-    p = data["modulus"]
+    g = data["g"]
+    q = data["q"]
+    p = data["p"]
 
     lib = cdll.LoadLibrary("./libbgmix.so")
     
