@@ -6,7 +6,11 @@ from flask import (
     request,
     url_for
 )
-import os
+from os.path import (
+    join as p_join,
+    realpath,
+    split as p_split
+)
 from werkzeug.utils import secure_filename
 
 from main import (
@@ -14,7 +18,7 @@ from main import (
     verify as f_verify
 )
 
-UPLOAD_FOLDER = f"{os.getcwd()}/data"
+UPLOAD_FOLDER = p_join(p_split(realpath(__file__))[0], "data")
 ALLOWED_EXTENSIONS = {"json", "txt"}
 
 app = Flask(__name__)
@@ -44,7 +48,7 @@ def mix():
         election_file = request.files["election_file"]
         if election_file and allowed_file(election_file.filename):
             filename = secure_filename(election_file.filename)
-            path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+            path = p_join(app.config["UPLOAD_FOLDER"], filename)
             election_file.save(path)
             f_mix(m, n, "data/ciphers.json", "data/public_randoms.txt", "data/proof.txt", path)
             return redirect(url_for('index'))
@@ -64,7 +68,7 @@ def verify():
             paths = {}
             for key in files.keys(): 
                 filename = secure_filename(files[key].filename)
-                paths[key] = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+                paths[key] = p_join(app.config["UPLOAD_FOLDER"], filename)
                 files[key].save(paths[key])
 
             valid = f_verify(m, n, paths["ciphers"], paths["publics"], paths["proof"])
