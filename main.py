@@ -24,6 +24,12 @@ def make() -> None:
     if system(f"export LD_LIBRARY_PATH=/usr/local/lib:{dir_path}") == -1:
         raise Exception("Library linking failed")
 
+def create_cipher(fun, c_secret, c_g, c_q, c_p, c_y):
+    _ret = create_string_buffer(10000)
+    fun(c_secret, _ret, c_g, c_q, c_p, c_y)
+    pad_array = _ret.value.decode("utf-8").split(",")
+    return [int(i) for i in pad_array]
+
 def mix(m, n, ciphers_file, publics_file, proof_file, election_file) -> None:
     #make()
 
@@ -41,8 +47,6 @@ def mix(m, n, ciphers_file, publics_file, proof_file, election_file) -> None:
             alpha, beta
         ])
 
-    alpha_pad = int(data["ciphertextForPadding"]["alpha"])
-    beta_pad = int(data["ciphertextForPadding"]["beta"])
     seed_pad = "1257206741114416297422800737364823130751266673136"
 
     key = data["publicKey"]
@@ -69,28 +73,25 @@ def mix(m, n, ciphers_file, publics_file, proof_file, election_file) -> None:
 
     for _ in range(len(ciphers), m*n):
         # ElGammal encryption of the string "INVALID"
-        _ret = create_string_buffer(1000)
-        fun(c_secret, _ret, c_g, c_q, c_p, c_y)
-        pad_array = _ret.value.decode("utf-8").split(",")
-        ciphers.append([
-            int(pad_array[0]), int(pad_array[1])
-        ])
+        pad_array = create_cipher(fun, c_secret, c_g, c_q, c_p, c_y)
+        while 0 in pad_array:
+            pad_array = create_cipher(fun, c_secret, c_g, c_q, c_p, c_y)
+        ciphers.append(pad_array)
 
     od = OrderedDict()
-    od["generator"] = g
-    od["order"] = q
-    od["modulus"] = p
-    od["public"] = y
-    od["proof"] = ""
+    od["g"] = g
+    od["q"] = q
+    od["p"] = p
+    od["y"] = y
     od["original_ciphers"] = ciphers
-    od["mixed_ciphers"] = []
+    #od["mixed_ciphers"] = []
 
     f = open(ciphers_file, "w")
     json.dump(od, f)
     f.close
 
     print("Created file")
-    return
+
     b_ciphers = ciphers_file.encode("utf-8")
     c_ciphers = c_char_p(b_ciphers)
     b_publics = publics_file.encode("utf-8")
