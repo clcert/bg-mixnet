@@ -1,23 +1,26 @@
 from collections import OrderedDict
 from ctypes import (
     cdll,
+    create_string_buffer,
     c_bool,
     c_char_p,
-    c_long,
+    c_long
 )
 import json
 from os import system
 from os.path import (
+    join as p_join,
     realpath,
     split as p_split
 )
 import sys
 
 def make() -> None:
-    if system("make") == -1:
+    dir_path = p_split(realpath(__file__))[0]
+    log_path = p_join(dir_path, "main.log")
+    if system(f"make LOG_CRYPTO_OUTPUT={log_path}") == -1:
         raise Exception("Compilation failed")
     
-    dir_path = p_split(realpath(__file__))[0]
     if system(f"export LD_LIBRARY_PATH=/usr/local/lib:{dir_path}") == -1:
         raise Exception("Library linking failed")
 
@@ -40,33 +43,54 @@ def mix(m, n, ciphers_file, publics_file, proof_file, election_file) -> None:
 
     alpha_pad = int(data["ciphertextForPadding"]["alpha"])
     beta_pad = int(data["ciphertextForPadding"]["beta"])
-
-    for _ in range(len(ciphers), m*n):
-        # ElGammal encryption of the string "Inval"
-        ciphers.append([
-            alpha_pad, beta_pad
-        ])
+    seed_pad = "1257206741114416297422800737364823130751266673136"
 
     key = data["publicKey"]
     g = int(key["g"])
     q = int(key["q"])
     p = int(key["p"])
+    y = int(key["y"])
+
+    lib = cdll.LoadLibrary("./libbgmix.so")
+
+    b_secret = seed_pad.encode("utf-8")
+    c_secret = c_char_p(b_secret)
+    b_g = str(g).encode("utf-8")
+    c_g = c_char_p(b_g)
+    b_q = str(q).encode("utf-8")
+    c_q = c_char_p(b_q)
+    b_p = str(p).encode("utf-8")
+    c_p = c_char_p(b_p)
+    b_y = str(y).encode("utf-8")
+    c_y = c_char_p(b_y)
+
+    fun = lib.encrypt_single_secret
+    fun.restype = c_char_p
+
+    for _ in range(len(ciphers), m*n):
+        # ElGammal encryption of the string "INVALID"
+        _ret = create_string_buffer(1000)
+        fun(c_secret, _ret, c_g, c_q, c_p, c_y)
+        pad_array = _ret.value.decode("utf-8").split(",")
+        ciphers.append([
+            int(pad_array[0]), int(pad_array[1])
+        ])
 
     od = OrderedDict()
-    od["g"] = g
-    od["p"] = p
-    od["q"] = q
-    od["y"] = int(key["y"])
-    od["original_ciphers"] = ciphers.__str__()
+    od["generator"] = g
+    od["order"] = q
+    od["modulus"] = p
+    od["public"] = y
+    od["proof"] = ""
+    od["original_ciphers"] = ciphers
+    od["mixed_ciphers"] = []
 
     f = open(ciphers_file, "w")
     json.dump(od, f)
     f.close
 
     print("Created file")
-
-    lib = cdll.LoadLibrary("./libbgmix.so")
-
+    return
     b_ciphers = ciphers_file.encode("utf-8")
     c_ciphers = c_char_p(b_ciphers)
     b_publics = publics_file.encode("utf-8")
@@ -82,7 +106,6 @@ def mix(m, n, ciphers_file, publics_file, proof_file, election_file) -> None:
     b_p = str(p).encode("utf-8")
     c_p = c_char_p(b_p)
     lib.mix(c_ciphers, c_publics, c_proof, c_m, c_n, c_g, c_q, c_p)
-
     f = open(ciphers_file, "r")
     data = f.read().replace('}', '', 1)
     f.close()
@@ -137,7 +160,7 @@ if __name__ == "__main__":
                 ciphers_file = "ciphers.json"
                 publics_file = "public_randoms.txt"
                 proof_file = "proof.txt"
-                election_file = "sample.json"
+                election_file = "sample_1.json"
             else:
                 m = int(sys.argv[2])
                 n = int(sys.argv[3])

@@ -426,9 +426,8 @@ bool generate_ciphers(const char* ciphers_file, const long dim_m, const long dim
 // requires shuffle_internal to be called first and cached data must be passed in
 // on exit, deletes cached shuffle data
 // TODO cache freeing function may be cleaner interface
-void prove(void *cache_data, string &proof, string &pubv) {
-	init();
-
+void prove(void *cache_data, string &proof, string &pubv, const char* g, const char* q, const char* p) {
+	init_specified(g, q, p);
 	RemoteShuffler *P = (RemoteShuffler*) cache_data;
 
 	proof = P->create_nizk();
@@ -502,7 +501,7 @@ bool mix(const char* ciphers_file, const char* publics_file, const char* proof_f
 	CipherTable* shuffled_ciphers = new CipherTable(((RemoteShuffler*)cached_shuffle)->getC(), m, true);
 	cout << "Shuffle is done! In " << time(NULL) - shuffle_time << endl;
         time_t prove_time = time(NULL);
-	prove(cached_shuffle, proof, public_randoms);
+	prove(cached_shuffle, proof, public_randoms, g, q, p);
 	cout << "Proof is done! In " << time(NULL) - prove_time << endl;
 
 	time_t verify_time = time(NULL);
@@ -637,20 +636,30 @@ void init_specified(const char* g, const char* q, const char* p) {
 	kIsInit = true;
 }
 
+ElGammal* init_with_public_key(const char* y) {
+	Mod_p pk;
+	istringstream pkstr(y);
+	pkstr >> pk;
+	ElGammal* ret = new ElGammal();
+	ret->set_group(G);
+	ret->set_pk(pk);
+	return ret;
+}
+
 /**
  * @brief Encrypts a single seccret into an ElGammal pair
  * 
  * @param secret secret to be encrypted
  * @return long* alpha, beta array
  */
-unsigned long *encrypt_single_secret(long secret, const char* g, const char* q, const char* p) {
+char *encrypt_single_secret(char* secret, char* result, const char* g, const char* q, const char* p, const char* y) {
 	init_specified(g, q, p);
-	ElGammal* elgammal = (ElGammal*)create_pub_key(8);
+	ElGammal* elgammal = (ElGammal*)init_with_public_key(y);//create_pub_key(1);
 	Cipher_elg cipher = Functions::createSingleCipher(to_ZZ(secret), elgammal);
-	CurvePoint u = cipher.get_u();
-	CurvePoint v = cipher.get_v();
-	unsigned long *ret = new unsigned long[2];
-	ret[0] = to_ulong(u.zz);
-	ret[1] = to_ulong(v.zz);
-	return ret;
+	stringstream cipher_str;
+	cipher_str << cipher;
+	string str = cipher_str.str();
+	str = str.substr(1, str.size() -2);
+	str.copy(result, str.size());
+	return result;
 }

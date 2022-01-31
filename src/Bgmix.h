@@ -73,7 +73,7 @@ void* shuffle_internal(void* reenc_key,
                        void* input_ciphers,
                        int** permutation, int* permutation_len);
 
-unsigned long *encrypt_single_secret(long secret, const char* g, const char* q, const char* p);
+char *encrypt_single_secret(char* secret, char* result, const char* g, const char* q, const char* p, const char* y);
 #ifdef __cplusplus
 }
 #endif

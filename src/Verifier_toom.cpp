@@ -519,8 +519,7 @@ bool Verifier_toom:: round_10(const string& input,vector<vector<Cipher_elg>* >* 
 	t9.join();
 	t10.join();
 
-
-        bool ret = true;
+	bool ret = true;
 	for (int i = 0; i < 11; i++) {
 		if (!b[i]) {
 			cout << "failed on " << i <<endl;
@@ -596,7 +595,8 @@ bool Verifier_toom:: round_10_red(const string& input,vector<vector<Cipher_elg>*
 	t8.join();
 	t9.join();
 	t10.join();
-        bool ret = true;
+
+	bool ret = true;
 	for (int i = 0; i < 11; i++) {
 		if (!b[i]) {
 			cout << "failed on " << i <<endl;

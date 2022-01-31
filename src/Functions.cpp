@@ -138,13 +138,13 @@ void Functions::write_crypto_ciphers_to_file(const char *ciphers_file,
 
 	ofciphers << "{";
 	ofciphers << "\"g\": " << group.get_gen();
-	ofciphers << ",\n";
+	ofciphers << ", ";
 	ofciphers << "\"q\": " << group.get_ord();
-	ofciphers << ",\n";
+	ofciphers << ", ";
 	ofciphers << "\"p\": " << group.get_mod();
-	ofciphers << ",\n";
+	ofciphers << ", ";
 	ofciphers << "\"y\": " << elgammal->get_pk();
-	ofciphers << ",\n";
+	ofciphers << ", ";
 	ofciphers << "\"original_ciphers\": [";
 	
 	for (int i = 0; i < m; i++) {
@@ -155,7 +155,7 @@ void Functions::write_crypto_ciphers_to_file(const char *ciphers_file,
 			//cout << "cipher " << i << " " << j << " : " << ciphers->getCipher(i, j) << endl;
 		}
 	}
-    ofciphers << "],\n";
+    ofciphers << "],";
 
     ofciphers << "\"mixed_ciphers\": [";
 	if (mixed_ciphers != NULL) {
@@ -168,7 +168,7 @@ void Functions::write_crypto_ciphers_to_file(const char *ciphers_file,
 			}
 		}
 	}
-    ofciphers << "]\n";
+    ofciphers << "]";
     ofciphers << "}";
 	ofciphers.close();
 
