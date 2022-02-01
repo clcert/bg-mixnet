@@ -11,7 +11,8 @@ extern "C" {
 
 void hello();
 
-bool generate_ciphers(const char * ciphers_file, const long dim_m, const long dim_n);
+bool generate_ciphers(const char * ciphers_file, const char * publics_file, const char * proof_file, const long dim_m, const long dim_n,
+                        const char* g, const char* q, const char* p);
 bool mix(const char * ciphers_file, const char * publics_file, const char * proof_file, const long dim_m, const long dim_n,
         const char* g, const char* q, const char* p);
 // Added external validation of mixing
