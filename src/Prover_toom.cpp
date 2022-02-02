@@ -439,11 +439,11 @@ void  Prover_toom::round_7c_red(){
 	func_pro::commit_B0_op(B_0, basis_B0, r_B0, c_B0, omega_mulex, ped_);
 
 	tstart = high_resolution_clock::now();
+	cout << "Calculate e" << endl;
 	e= calculate_e();
 	tstop = high_resolution_clock::now();
 	time_di = time_di+duration<double>(tstop-tstart).count();
 	//cout<<"To calculate the di's took "<<time_di<<" sec."<<endl;
-
 	calculate_E(e);
 
 	Functions::delete_vector(C_small);
@@ -515,8 +515,9 @@ string Prover_toom::round_7_red(const string& input){
 
 	round_7a();
 	round_7b();
+	cout << "Begin round 7c red" << endl;
 	round_7c_red();
-
+	cout << "End round 7c red" << endl;
 
 
 	stringstream ost;
@@ -864,7 +865,7 @@ vector<Cipher_elg>* Prover_toom::calculate_e(){
 	vector<Cipher_elg>* dt = 0;
 	vector<Cipher_elg>* e = new vector<Cipher_elg>(2*m);
     //high_resolution_clock::time_point t1, t2;
-	
+	cout << "toom4_pow" << endl;
 	dt = toom4_pow(C_small, B_small);
 	    //PARALLELIZE	
 	    //t1 = high_resolution_clock::now();
@@ -1045,9 +1046,11 @@ vector<vector<vector<CurvePoint>*>*>* Prover_toom::evulation_pow(vector<vector<C
 		PowerMod(temp_1_u, p->at(0)->at(i).get_u(), 8, mod);
 		MulMod(row_u->at(1), temp_u,temp_1_u,mod);
 		MulMod(row_u->at(2) , p0_u,p1_u,mod);
+		cout << "row " << i << ": InvMod(p1_u)" << endl;
 		InvMod(temp_u, p1_u, mod);
 		MulMod(row_u->at(3) , p0_u,temp_u,mod);
 		MulMod(row_u ->at(4) , p2_u,p3_u,mod);
+		cout << "row " << i << ": InvMod(p3_u)" << endl;
 		InvMod(temp_u, p3_u, mod);
 		MulMod(row_u ->at(5),p2_u,temp_u,mod);
 		row_u->at(6) = p->at(3)->at(i).get_u();
@@ -1060,9 +1063,11 @@ vector<vector<vector<CurvePoint>*>*>* Prover_toom::evulation_pow(vector<vector<C
 		PowerMod(temp_1_v, p->at(0)->at(i).get_v(), 8, mod);
 		MulMod(row_v->at(1), temp_v,temp_1_v,mod);
 		MulMod(row_v->at(2) , p0_v,p1_v,mod);
+		cout << "row " << i << ": InvMod(p1_v)" << endl;
 		InvMod(temp_v, p1_v, mod);
 		MulMod(row_v->at(3) , p0_v,temp_v,mod);
 		MulMod(row_v ->at(4) , p2_v,p3_v,mod);
+		cout << "row " << i << ": InvMod(p3_v)" << endl;
 		InvMod(temp_v, p3_v, mod);
 		MulMod(row_v ->at(5),p2_v,temp_v,mod);
 		row_v->at(6) = p->at(3)->at(i).get_v();
@@ -1254,6 +1259,7 @@ vector<Cipher_elg>* Prover_toom::toom4_pow(vector<vector<Cipher_elg>*>* p, vecto
 	long i,l;
 	ZZ mod = H.get_mod();
 	//auto begin= high_resolution_clock::now();
+	cout << "evaluation_pow(p)" << endl;
 	points_p = evulation_pow(p);
 	points_q = evulation(q);
 	points_temp = point_pow(points_p, points_q);

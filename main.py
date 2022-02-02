@@ -71,6 +71,9 @@ def mix(m, n, ciphers_file, publics_file, proof_file, election_file) -> None:
     fun = lib.encrypt_single_secret
     fun.restype = c_char_p
 
+    cm_len = len(ciphers)
+    print(f"Read {cm_len} cipher pairs")
+    print(f"Padding with {m*n - cm_len} cipher pairs")
     for _ in range(len(ciphers), m*n):
         # ElGammal encryption of the string "INVALID"
         pad_array = create_cipher(fun, c_secret, c_g, c_q, c_p, c_y)
@@ -161,7 +164,7 @@ if __name__ == "__main__":
                 ciphers_file = "ciphers.json"
                 publics_file = "public_randoms.txt"
                 proof_file = "proof.txt"
-                election_file = "sample_1.json"
+                election_file = "sample_2.json"
             else:
                 m = int(sys.argv[2])
                 n = int(sys.argv[3])

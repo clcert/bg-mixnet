@@ -83,6 +83,7 @@ string RemoteShuffler::create_nizk() {
                                         &c, &r);
 			proof.add_new_step(v, c, r);
 		}
+		cout << "Begin round 7 red" << endl;
 		v = round7red(input_for_next_prover, &input_for_next_prover, &c, &r);
 		proof.add_new_step(v, c, r);
 	}
